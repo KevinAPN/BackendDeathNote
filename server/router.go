@@ -9,6 +9,9 @@ import (
 func (s *Server) router() http.Handler {
 	router := mux.NewRouter()
 
+	// Middleware de CORS
+	router.Use(MiddlewareCORS)
+
 	// Middleware de logging
 	router.Use(s.logger.RequestLogger)
 
@@ -27,22 +30,18 @@ func (s *Server) router() http.Handler {
 		Methods(http.MethodGet, http.MethodPut, http.MethodDelete)
 
 	// Registrar causa y detalles
-	router.HandleFunc("/people/{id}/cause", s.HandleAddCause).
-		Methods(http.MethodPost)
-	router.HandleFunc("/people/{id}/details", s.HandleAddDetails).
-		Methods(http.MethodPost)
+	router.HandleFunc("/people/{id}/cause", s.HandleAddCause).Methods(http.MethodPost)
+	router.HandleFunc("/people/{id}/details", s.HandleAddDetails).Methods(http.MethodPost)
 
-	// Endpoint para obtener la duración de una persona viva
+	// Config (duraciones)
 	router.HandleFunc("/config", s.HandleGetConfig).Methods(http.MethodGet)
 
-	// Endpoint para obtener estado de una persona
-	router.HandleFunc("/people/{id}/status", s.HandleGetStatus).
-		Methods(http.MethodGet)
+	// Estado actual
+	router.HandleFunc("/people/{id}/status", s.HandleGetStatus).Methods(http.MethodGet)
 
-	// Endpoints para kills (muerte)
+	// Kills
 	router.HandleFunc("/kills", s.HandleKills).Methods(http.MethodGet)
-	router.HandleFunc("/kills/{id}", s.HandleKillsWithId).
-		Methods(http.MethodPost, http.MethodDelete)
+	router.HandleFunc("/kills/{id}", s.HandleKillsWithId).Methods(http.MethodPost, http.MethodDelete)
 
 	return router
 }
