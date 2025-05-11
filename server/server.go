@@ -107,3 +107,13 @@ func (s *Server) initDB() {
 	s.PeopleRepository = repository.NewPeopleRepository(s.DB)
 
 }
+
+// HandleGetConfig expone las duraciones configuradas
+func (s *Server) HandleGetConfig(w http.ResponseWriter, r *http.Request) {
+	cfg := map[string]int{
+		"kill_duration":                  s.Config.KillDuration,
+		"kill_duration_with_description": s.Config.KillDurationWithDescription,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cfg)
+}

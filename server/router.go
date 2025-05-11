@@ -28,6 +28,9 @@ func (s *Server) router() http.Handler {
 	router.HandleFunc("/people/{id}/details", s.HandleAddDetails).
 		Methods(http.MethodPost)
 
+	// Endpoint para obtener la duración de una persona viva
+	router.HandleFunc("/config", s.HandleGetConfig).Methods(http.MethodGet)
+
 	// Endpoint para obtener estado de una persona
 	router.HandleFunc("/people/{id}/status", s.HandleGetStatus).
 		Methods(http.MethodGet)
