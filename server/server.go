@@ -1,3 +1,4 @@
+// server/server.go
 package server
 
 import (
@@ -18,7 +19,6 @@ import (
 type Server struct {
 	DB               *gorm.DB
 	Config           *config.Config
-	Handler          http.Handler
 	PeopleRepository *repository.PeopleRepository
 	KillRepository   *repository.KillRepository
 	logger           *logger.Logger
@@ -35,15 +35,13 @@ func NewServer() *Server {
 	if err != nil {
 		s.logger.Fatal(err)
 	}
-	err = json.Unmarshal(configFile, &config)
-	if err != nil {
+	if err := json.Unmarshal(configFile, &config); err != nil {
 		s.logger.Fatal(err)
 	}
 	s.Config = &config
 	return s
 }
 
-// NewTestServer crea un servidor listo para pruebas con la configuración proporcionada
 func NewTestServer(cfg *config.Config) *Server {
 	s := &Server{
 		Config:    cfg,
@@ -56,23 +54,13 @@ func NewTestServer(cfg *config.Config) *Server {
 	return s
 }
 
-// Handler retorna el router con todas las rutas y middleware
-func (s *Server) GetRouter() http.Handler {
-	return s.router()
-}
-
-// CancelTaskForTest permite cancelar tareas desde pruebas
-func (s *Server) CancelTaskForTest(id int) {
-	s.taskQueue.CancelTask(id)
-}
-
 func (s *Server) StartServer() {
 	fmt.Println("Inicializando base de datos...")
 	s.initDB()
 	fmt.Println("Inicializando mux...")
 	srv := &http.Server{
 		Addr:    s.Config.Address,
-		Handler: s.router(),
+		Handler: s.GetRouter(),
 	}
 	fmt.Println("Escuchando en el puerto ", s.Config.Address)
 	if err := srv.ListenAndServe(); err != nil {
@@ -105,10 +93,9 @@ func (s *Server) initDB() {
 	s.DB.AutoMigrate(&models.Person{}, &models.Kill{})
 	s.KillRepository = repository.NewKillRepository(s.DB)
 	s.PeopleRepository = repository.NewPeopleRepository(s.DB)
-
 }
 
-// HandleGetConfig expone las duraciones configuradas
+// HandleGetConfig expone las duraciones configuradas al frontend
 func (s *Server) HandleGetConfig(w http.ResponseWriter, r *http.Request) {
 	cfg := map[string]int{
 		"kill_duration":                  s.Config.KillDuration,
@@ -116,4 +103,9 @@ func (s *Server) HandleGetConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(cfg)
+}
+
+// CancelTaskForTest permite cancelar tareas desde pruebas
+func (s *Server) CancelTaskForTest(id int) {
+	s.taskQueue.CancelTask(id)
 }
