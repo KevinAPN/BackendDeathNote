@@ -12,6 +12,10 @@ func (s *Server) router() http.Handler {
 	// Middleware de logging
 	router.Use(s.logger.RequestLogger)
 
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Death Note API is running"))
+	}).Methods(http.MethodGet)
+
 	// Servir archivos estáticos desde uploads/ en /static/
 	router.
 		PathPrefix("/static/").
